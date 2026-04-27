@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>タスク管理アプリ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      background: #1d4e89;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #0052cc;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,.3);
+    }
+    header h1 { color:#fff; font-size:18px; font-weight:700; letter-spacing:.5px; }
+    #btn-add-column {
+      background: rgba(255,255,255,.25); color:#fff; border:none;
+      padding:6px 14px; border-radius:4px; cursor:pointer;
+      font-size:13px; font-weight:600; transition:background .15s;
+    }
+    #btn-add-column:hover { background: rgba(255,255,255,.38); }
+
+    /* ── Board ── */
+    #board {
+      flex:1; display:flex; align-items:flex-start;
+      padding:16px; gap:12px; overflow-x:auto;
+    }
+
+    /* ── Column ── */
+    .column {
+      background:#ebecf0; border-radius:6px;
+      width:280px; min-width:280px; display:flex;
+      flex-direction:column; max-height:calc(100vh - 80px);
+    }
+
+    .column-header { padding:10px 12px 4px; }
+    .column-header-top {
+      display:flex; align-items:center;
+      justify-content:space-between; margin-bottom:6px;
+    }
+    .column-title {
+      font-weight:700; font-size:14px; color:#172b4d;
+      flex:1; cursor:pointer; border-radius:3px; padding:2px 4px;
+    }
+    .column-title:hover { background:rgba(0,0,0,.07); }
+    .column-title-input {
+      font-weight:700; font-size:14px; color:#172b4d;
+      border:2px solid #0052cc; border-radius:3px;
+      padding:2px 4px; width:100%; outline:none;
+    }
+    .btn-delete-column {
+      background:none; border:none; cursor:pointer; color:#6b778c;
+      font-size:16px; line-height:1; padding:2px 4px; border-radius:3px;
+      transition:background .12s,color .12s;
+    }
+    .btn-delete-column:hover { background:#c1c7d0; color:#172b4d; }
+
+    /* ── Sort bar ── */
+    .sort-bar {
+      display:flex; gap:4px; padding-bottom:4px;
+    }
+    .btn-sort {
+      background:none; border:1px solid #b0b8c8; color:#5e6c84;
+      border-radius:3px; padding:2px 8px; font-size:11px;
+      cursor:pointer; transition:background .12s, color .12s, border-color .12s;
+      display:flex; align-items:center; gap:3px;
+    }
+    .btn-sort:hover { background:#d5d9e0; color:#172b4d; border-color:#8993a4; }
+    .btn-sort.active { background:#0052cc; color:#fff; border-color:#0052cc; }
+
+    /* ── Card list ── */
+    .card-list {
+      padding:4px 8px; display:flex; flex-direction:column;
+      gap:6px; overflow-y:auto; flex:1;
+    }
+
+    /* ── Card ── */
+    .card {
+      background:#fff; border-radius:4px; padding:8px 10px;
+      box-shadow:0 1px 3px rgba(0,0,0,.12);
+      cursor:grab; transition:box-shadow .12s;
+      border-left:4px solid transparent;
+    }
+    .card:hover { box-shadow:0 3px 8px rgba(0,0,0,.18); }
+    .card.dragging { opacity:.4; cursor:grabbing; }
+    .card.priority-高  { border-left-color:#e53935; }
+    .card.priority-中  { border-left-color:#fb8c00; }
+    .card.priority-低  { border-left-color:#43a047; }
+
+    .card-header { display:flex; align-items:flex-start; gap:6px; }
+    .card-body   { flex:1; min-width:0; }
+    .card-title  { word-break:break-word; line-height:1.4; color:#172b4d; }
+
+    .card-meta {
+      display:flex; align-items:center; gap:6px;
+      margin-top:5px; flex-wrap:wrap;
+    }
+    .badge-priority {
+      font-size:10px; font-weight:700; padding:1px 6px;
+      border-radius:3px; color:#fff; white-space:nowrap;
+    }
+    .badge-priority.高 { background:#e53935; }
+    .badge-priority.中 { background:#fb8c00; }
+    .badge-priority.低 { background:#43a047; }
+
+    .due-date {
+      font-size:11px; color:#5e6c84; display:flex;
+      align-items:center; gap:2px;
+    }
+    .due-date.overdue  { color:#e53935; font-weight:600; }
+    .due-date.due-soon { color:#fb8c00; font-weight:600; }
+
+    .btn-delete-card {
+      background:none; border:none; cursor:pointer; color:#97a0af;
+      font-size:14px; line-height:1; padding:0 2px; border-radius:3px;
+      flex-shrink:0; transition:color .12s; align-self:flex-start;
+    }
+    .btn-delete-card:hover { color:#e53935; }
+
+    /* ── Drop placeholder ── */
+    .drop-placeholder {
+      height:40px; border:2px dashed #0052cc;
+      border-radius:4px; background:rgba(0,82,204,.08);
+    }
+
+    /* ── Add card ── */
+    .add-card-area { padding:6px 8px 8px; }
+    .btn-add-card {
+      width:100%; background:none; border:none; cursor:pointer;
+      text-align:left; padding:6px 8px; border-radius:4px;
+      color:#5e6c84; font-size:13px; transition:background .12s,color .12s;
+    }
+    .btn-add-card:hover { background:#cdd0d6; color:#172b4d; }
+
+    .add-card-form { display:flex; flex-direction:column; gap:6px; }
+    .add-card-form textarea,
+    .add-card-form input[type="date"] {
+      border:2px solid #0052cc; border-radius:4px;
+      padding:6px 8px; font-size:14px; font-family:inherit;
+      outline:none; line-height:1.4;
+    }
+    .add-card-form textarea { resize:none; }
+
+    .form-row { display:flex; gap:8px; align-items:center; }
+    .form-row label { font-size:12px; color:#5e6c84; white-space:nowrap; }
+    .form-row select,
+    .form-row input[type="date"] {
+      border:1px solid #b0b8c8; border-radius:4px;
+      padding:4px 6px; font-size:13px; font-family:inherit;
+      outline:none; flex:1; background:#fff;
+    }
+    .form-row select:focus,
+    .form-row input[type="date"]:focus { border-color:#0052cc; }
+
+    .add-card-form-actions { display:flex; gap:6px; align-items:center; }
+    .btn-confirm {
+      background:#0052cc; color:#fff; border:none;
+      border-radius:4px; padding:5px 12px; cursor:pointer;
+      font-size:13px; font-weight:600; transition:background .12s;
+    }
+    .btn-confirm:hover { background:#0747a6; }
+    .btn-cancel {
+      background:none; border:none; cursor:pointer; color:#5e6c84;
+      font-size:13px; padding:5px 6px; border-radius:4px;
+      transition:background .12s;
+    }
+    .btn-cancel:hover { background:#c1c7d0; color:#172b4d; }
+
+    /* ── Add column form ── */
+    #add-column-form-wrap {
+      display:none; background:#ebecf0; border-radius:6px;
+      width:280px; min-width:280px; padding:10px;
+      align-self:flex-start; flex-shrink:0;
+    }
+    #add-column-form-wrap input {
+      width:100%; border:2px solid #0052cc; border-radius:4px;
+      padding:6px 8px; font-size:14px; outline:none; margin-bottom:8px;
+    }
+
+    /* ── Card edit dialog ── */
+    dialog {
+      border:none; border-radius:8px; padding:0;
+      width:360px; box-shadow:0 8px 24px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    dialog::backdrop { background:rgba(0,0,0,.45); }
+
+    .dialog-header {
+      background:#0052cc; color:#fff;
+      padding:14px 20px; font-size:15px; font-weight:700;
+    }
+    .dialog-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
+    .dialog-field { display:flex; flex-direction:column; gap:4px; }
+    .dialog-field label { font-size:12px; font-weight:600; color:#5e6c84; }
+    .dialog-field textarea,
+    .dialog-field input[type="date"] {
+      border:1.5px solid #c1c7d0; border-radius:4px;
+      padding:7px 10px; font-size:14px; font-family:inherit;
+      outline:none; transition:border-color .12s;
+    }
+    .dialog-field textarea { resize:vertical; min-height:60px; }
+    .dialog-field textarea:focus,
+    .dialog-field input[type="date"]:focus { border-color:#0052cc; }
+
+    .priority-select-group {
+      display:flex; gap:8px;
+    }
+    .priority-option {
+      flex:1; display:flex; flex-direction:column; align-items:center;
+      gap:4px; cursor:pointer;
+    }
+    .priority-option input[type="radio"] { display:none; }
+    .priority-option span {
+      display:block; width:100%; text-align:center;
+      padding:5px 0; border-radius:4px; font-size:12px; font-weight:700;
+      border:2px solid #c1c7d0; color:#5e6c84;
+      transition:all .12s; cursor:pointer;
+    }
+    .priority-option input[type="radio"]:checked + span {
+      border-color: transparent; color:#fff;
+    }
+    .priority-option.opt-高 input[type="radio"]:checked + span { background:#e53935; border-color:#e53935; }
+    .priority-option.opt-中 input[type="radio"]:checked + span { background:#fb8c00; border-color:#fb8c00; }
+    .priority-option.opt-低 input[type="radio"]:checked + span { background:#43a047; border-color:#43a047; }
+    .priority-option.opt-なし input[type="radio"]:checked + span { background:#5e6c84; border-color:#5e6c84; }
+
+    .dialog-footer {
+      padding:12px 20px 16px;
+      display:flex; justify-content:flex-end; gap:8px;
+      border-top:1px solid #ebecf0;
+    }
+    .btn-danger {
+      background:#e53935; color:#fff; border:none;
+      border-radius:4px; padding:7px 16px; cursor:pointer;
+      font-size:13px; font-weight:600; transition:background .12s;
+    }
+    .btn-danger:hover { background:#c62828; }
+
+    /* ── Confirm dialog (delete) ── */
+    #confirm-dialog .dialog-body p {
+      color:#172b4d; font-size:15px; line-height:1.5;
+    }
+    #confirm-dialog .dialog-body strong { color:#e53935; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>タスク管理アプリ</h1>
+  <button id="btn-add-column">+ カラム追加</button>
+</header>
+
+<main id="board"></main>
+
+<!-- カード編集ダイアログ -->
+<dialog id="edit-card-dialog">
+  <div class="dialog-header">カードを編集</div>
+  <div class="dialog-body">
+    <div class="dialog-field">
+      <label>タイトル</label>
+      <textarea id="edit-title" rows="2"></textarea>
+    </div>
+    <div class="dialog-field">
+      <label>優先度</label>
+      <div class="priority-select-group">
+        <label class="priority-option opt-高">
+          <input type="radio" name="edit-priority" value="高" />
+          <span>高</span>
+        </label>
+        <label class="priority-option opt-中">
+          <input type="radio" name="edit-priority" value="中" />
+          <span>中</span>
+        </label>
+        <label class="priority-option opt-低">
+          <input type="radio" name="edit-priority" value="低" />
+          <span>低</span>
+        </label>
+        <label class="priority-option opt-なし">
+          <input type="radio" name="edit-priority" value="" />
+          <span>なし</span>
+        </label>
+      </div>
+    </div>
+    <div class="dialog-field">
+      <label>期限日</label>
+      <input type="date" id="edit-due-date" />
+    </div>
+  </div>
+  <div class="dialog-footer">
+    <button class="btn-cancel" id="edit-cancel">キャンセル</button>
+    <button class="btn-confirm" id="edit-save">保存</button>
+  </div>
+</dialog>
+
+<!-- カラム削除確認ダイアログ -->
+<dialog id="confirm-dialog">
+  <div class="dialog-header">カラムの削除</div>
+  <div class="dialog-body">
+    <p id="confirm-msg"></p>
+  </div>
+  <div class="dialog-footer">
+    <button class="btn-cancel" id="dialog-cancel">キャンセル</button>
+    <button class="btn-danger" id="dialog-confirm">削除する</button>
+  </div>
+</dialog>
+
+<script>
+  // ── State ──────────────────────────────────────────────
+  let nextColId  = 4;
+  let nextCardId = 7;
+
+  let state = {
+    columns: [
+      { id:1, title:"Todo", cards:[
+          { id:1, title:"タスクA", priority:"高", dueDate:"2025-04-30" },
+          { id:2, title:"タスクB", priority:"中", dueDate:"2025-05-20" },
+          { id:6, title:"タスクF", priority:"低", dueDate:"" },
+      ]},
+      { id:2, title:"In Progress", cards:[
+          { id:3, title:"タスクC", priority:"高", dueDate:"2025-05-10" },
+      ]},
+      { id:3, title:"Done", cards:[
+          { id:5, title:"タスクE", priority:"",  dueDate:"2025-04-15" },
+      ]},
+    ]
+  };
+
+  // ── Drag state ─────────────────────────────────────────
+  let drag = { cardId:null, fromColId:null };
+
+  // ── Helpers ────────────────────────────────────────────
+  const findCol  = id => state.columns.find(c => c.id === id);
+  const findCard = (col, id) => col.cards.find(c => c.id === id);
+  const today    = () => new Date().toISOString().slice(0,10);
+
+  function dueDateStatus(dueDate) {
+    if (!dueDate) return null;
+    const t = today();
+    if (dueDate < t) return "overdue";
+    const diff = (new Date(dueDate) - new Date(t)) / 86400000;
+    if (diff <= 3) return "due-soon";
+    return "normal";
+  }
+
+  function formatDate(d) {
+    if (!d) return "";
+    const [y,m,day] = d.split("-");
+    return `${y}/${m}/${day}`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // ── Sort helpers ───────────────────────────────────────
+  const PRIORITY_ORDER = { "高":0, "中":1, "低":2, "":3 };
+
+  function sortByPriority(cards) {
+    return [...cards].sort((a,b) =>
+      (PRIORITY_ORDER[a.priority ?? ""] ?? 3) - (PRIORITY_ORDER[b.priority ?? ""] ?? 3)
+    );
+  }
+
+  function sortByDueDate(cards) {
+    return [...cards].sort((a,b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+  }
+
+  // ── Render ─────────────────────────────────────────────
+  function render() {
+    const board = document.getElementById("board");
+    [...board.querySelectorAll(".column")].forEach(el => el.remove());
+    const addFormWrap = document.getElementById("add-column-form-wrap");
+    state.columns.forEach(col => {
+      board.insertBefore(buildColumn(col), addFormWrap);
+    });
+  }
+
+  function buildColumn(col) {
+    const el = document.createElement("div");
+    el.className = "column";
+    el.dataset.colId = col.id;
+
+    // ── Header ──
+    const header = document.createElement("div");
+    header.className = "column-header";
+
+    const headerTop = document.createElement("div");
+    headerTop.className = "column-header-top";
+
+    const titleEl = document.createElement("span");
+    titleEl.className = "column-title";
+    titleEl.textContent = col.title;
+    titleEl.addEventListener("click", () => startEditColTitle(col.id, titleEl));
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-delete-column";
+    delBtn.textContent = "×";
+    delBtn.title = "カラムを削除";
+    delBtn.addEventListener("click", () => confirmDeleteColumn(col.id));
+
+    headerTop.appendChild(titleEl);
+    headerTop.appendChild(delBtn);
+
+    // ── Sort bar ──
+    const sortBar = document.createElement("div");
+    sortBar.className = "sort-bar";
+
+    const btnSortPriority = document.createElement("button");
+    btnSortPriority.className = "btn-sort";
+    btnSortPriority.innerHTML = "↑ 優先度順";
+    btnSortPriority.addEventListener("click", () => {
+      col.cards = sortByPriority(col.cards);
+      render();
+    });
+
+    const btnSortDue = document.createElement("button");
+    btnSortDue.className = "btn-sort";
+    btnSortDue.innerHTML = "↑ 期限順";
+    btnSortDue.addEventListener("click", () => {
+      col.cards = sortByDueDate(col.cards);
+      render();
+    });
+
+    sortBar.appendChild(btnSortPriority);
+    sortBar.appendChild(btnSortDue);
+
+    header.appendChild(headerTop);
+    header.appendChild(sortBar);
+    el.appendChild(header);
+
+    // ── Card list ──
+    const list = document.createElement("div");
+    list.className = "card-list";
+    list.dataset.colId = col.id;
+
+    col.cards.forEach(card => list.appendChild(buildCard(card, col.id)));
+
+    list.addEventListener("dragover", e => {
+      e.preventDefault();
+      if (!list.querySelector(".drop-placeholder")) {
+        list.appendChild(makePlaceholder());
+      }
+    });
+    list.addEventListener("dragleave", e => {
+      if (!list.contains(e.relatedTarget)) removePlaceholders(list);
+    });
+    list.addEventListener("drop", e => {
+      e.preventDefault(); e.stopPropagation();
+      const ph  = list.querySelector(".drop-placeholder");
+      const idx = ph ? [...list.children].indexOf(ph) : list.children.length;
+      removePlaceholders(list);
+      moveCard(col.id, idx);
+    });
+
+    el.appendChild(list);
+
+    // ── Add card area ──
+    const addArea = document.createElement("div");
+    addArea.className = "add-card-area";
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "btn-add-card";
+    addBtn.textContent = "+ カード追加";
+    addBtn.addEventListener("click", () => showAddCardForm(col.id, addArea, addBtn));
+
+    addArea.appendChild(addBtn);
+    el.appendChild(addArea);
+
+    return el;
+  }
+
+  function buildCard(card, colId) {
+    const el = document.createElement("div");
+    el.className = "card" + (card.priority ? ` priority-${card.priority}` : "");
+    el.draggable = true;
+    el.dataset.cardId = card.id;
+    el.dataset.colId  = colId;
+
+    const cardHeader = document.createElement("div");
+    cardHeader.className = "card-header";
+
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "card-title";
+    titleEl.textContent = card.title;
+
+    // meta row
+    const meta = document.createElement("div");
+    meta.className = "card-meta";
+
+    if (card.priority) {
+      const badge = document.createElement("span");
+      badge.className = `badge-priority ${card.priority}`;
+      badge.textContent = card.priority;
+      meta.appendChild(badge);
+    }
+
+    if (card.dueDate) {
+      const status = dueDateStatus(card.dueDate);
+      const duEl = document.createElement("span");
+      duEl.className = "due-date" + (status === "overdue" ? " overdue" : status === "due-soon" ? " due-soon" : "");
+      duEl.textContent = "📅 " + formatDate(card.dueDate)
+        + (status === "overdue" ? " 期限切れ" : "");
+      meta.appendChild(duEl);
+    }
+
+    body.appendChild(titleEl);
+    if (card.priority || card.dueDate) body.appendChild(meta);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-delete-card";
+    delBtn.textContent = "×";
+    delBtn.title = "カードを削除";
+    delBtn.addEventListener("click", e => { e.stopPropagation(); deleteCard(colId, card.id); });
+
+    cardHeader.appendChild(body);
+    cardHeader.appendChild(delBtn);
+    el.appendChild(cardHeader);
+
+    // click to edit (open modal)
+    el.addEventListener("click", e => {
+      if (e.target === delBtn) return;
+      openEditCardDialog(colId, card.id);
+    });
+
+    // drag events
+    el.addEventListener("dragstart", e => {
+      drag.cardId    = card.id;
+      drag.fromColId = colId;
+      setTimeout(() => el.classList.add("dragging"), 0);
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("dragging");
+      document.querySelectorAll(".drop-placeholder").forEach(p => p.remove());
+    });
+    el.addEventListener("dragover", e => {
+      e.preventDefault(); e.stopPropagation();
+      const list = el.closest(".card-list");
+      removePlaceholders(list);
+      const rect = el.getBoundingClientRect();
+      const ph   = makePlaceholder();
+      if (e.clientY < rect.top + rect.height / 2) list.insertBefore(ph, el);
+      else el.after(ph);
+    });
+
+    return el;
+  }
+
+  // ── Placeholder ────────────────────────────────────────
+  function makePlaceholder() {
+    const ph = document.createElement("div");
+    ph.className = "drop-placeholder";
+    return ph;
+  }
+  function removePlaceholders(container) {
+    container.querySelectorAll(".drop-placeholder").forEach(p => p.remove());
+  }
+
+  // ── Move card ──────────────────────────────────────────
+  function moveCard(toColId, insertIdx) {
+    if (drag.cardId === null) return;
+    const fromCol = findCol(drag.fromColId);
+    const toCol   = findCol(toColId);
+    const cardIdx = fromCol.cards.findIndex(c => c.id === drag.cardId);
+    if (cardIdx === -1) return;
+    const [card] = fromCol.cards.splice(cardIdx, 1);
+    if (fromCol === toCol && insertIdx > cardIdx) insertIdx--;
+    toCol.cards.splice(Math.min(insertIdx, toCol.cards.length), 0, card);
+    drag.cardId = drag.fromColId = null;
+    render();
+  }
+
+  // ── Column title edit ──────────────────────────────────
+  function startEditColTitle(colId, titleEl) {
+    const col = findCol(colId);
+    const input = document.createElement("input");
+    input.className = "column-title-input";
+    input.value = col.title;
+    titleEl.replaceWith(input);
+    input.focus(); input.select();
+
+    const commit = () => { if (input.value.trim()) col.title = input.value.trim(); render(); };
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter")  { e.preventDefault(); commit(); }
+      if (e.key === "Escape") render();
+    });
+  }
+
+  // ── Card edit dialog ───────────────────────────────────
+  let editTarget = null; // { colId, cardId }
+
+  function openEditCardDialog(colId, cardId) {
+    const card = findCard(findCol(colId), cardId);
+    editTarget = { colId, cardId };
+
+    document.getElementById("edit-title").value    = card.title;
+    document.getElementById("edit-due-date").value = card.dueDate || "";
+
+    // priority radio
+    const radios = document.querySelectorAll('input[name="edit-priority"]');
+    radios.forEach(r => { r.checked = (r.value === (card.priority || "")); });
+
+    document.getElementById("edit-card-dialog").showModal();
+    document.getElementById("edit-title").focus();
+  }
+
+  document.getElementById("edit-save").addEventListener("click", () => {
+    if (!editTarget) return;
+    const col  = findCol(editTarget.colId);
+    const card = findCard(col, editTarget.cardId);
+    const title = document.getElementById("edit-title").value.trim();
+    if (!title) return;
+
+    card.title    = title;
+    card.dueDate  = document.getElementById("edit-due-date").value;
+    const checked = document.querySelector('input[name="edit-priority"]:checked');
+    card.priority = checked ? checked.value : "";
+
+    document.getElementById("edit-card-dialog").close();
+    editTarget = null;
+    render();
+  });
+
+  document.getElementById("edit-cancel").addEventListener("click", () => {
+    document.getElementById("edit-card-dialog").close();
+    editTarget = null;
+  });
+
+  // ── Delete card ────────────────────────────────────────
+  function deleteCard(colId, cardId) {
+    const col = findCol(colId);
+    col.cards = col.cards.filter(c => c.id !== cardId);
+    render();
+  }
+
+  // ── Add card form ──────────────────────────────────────
+  function showAddCardForm(colId, addArea, addBtn) {
+    addBtn.style.display = "none";
+
+    const form = document.createElement("div");
+    form.className = "add-card-form";
+
+    const ta = document.createElement("textarea");
+    ta.rows = 2;
+    ta.placeholder = "カードのタイトルを入力";
+
+    // priority row
+    const prioRow = document.createElement("div");
+    prioRow.className = "form-row";
+    const prioLabel = document.createElement("label");
+    prioLabel.textContent = "優先度";
+    const prioSelect = document.createElement("select");
+    [["", "なし"], ["高", "高"], ["中", "中"], ["低", "低"]].forEach(([v,t]) => {
+      const opt = document.createElement("option");
+      opt.value = v; opt.textContent = t;
+      prioSelect.appendChild(opt);
+    });
+    prioRow.appendChild(prioLabel);
+    prioRow.appendChild(prioSelect);
+
+    // due date row
+    const dueRow = document.createElement("div");
+    dueRow.className = "form-row";
+    const dueLabel = document.createElement("label");
+    dueLabel.textContent = "期限日";
+    const dueInput = document.createElement("input");
+    dueInput.type = "date";
+    dueRow.appendChild(dueLabel);
+    dueRow.appendChild(dueInput);
+
+    const actions = document.createElement("div");
+    actions.className = "add-card-form-actions";
+
+    const ok = document.createElement("button");
+    ok.className = "btn-confirm";
+    ok.textContent = "追加";
+
+    const cancel = document.createElement("button");
+    cancel.className = "btn-cancel";
+    cancel.textContent = "キャンセル";
+
+    actions.appendChild(ok);
+    actions.appendChild(cancel);
+    form.appendChild(ta);
+    form.appendChild(prioRow);
+    form.appendChild(dueRow);
+    form.appendChild(actions);
+    addArea.appendChild(form);
+    ta.focus();
+
+    const commit = () => {
+      const val = ta.value.trim();
+      if (val) {
+        findCol(colId).cards.push({
+          id: nextCardId++,
+          title:    val,
+          priority: prioSelect.value,
+          dueDate:  dueInput.value,
+        });
+      }
+      render();
+    };
+
+    ok.addEventListener("click", commit);
+    cancel.addEventListener("click", () => render());
+    ta.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit(); }
+      if (e.key === "Escape") render();
+    });
+  }
+
+  // ── Delete column ──────────────────────────────────────
+  let pendingDeleteColId = null;
+
+  function confirmDeleteColumn(colId) {
+    const col = findCol(colId);
+    pendingDeleteColId = colId;
+    const cardCount = col.cards.length;
+    const msgEl = document.getElementById("confirm-msg");
+    msgEl.innerHTML = cardCount > 0
+      ? `「<strong>${escHtml(col.title)}</strong>」を削除しますか？<br>このカラムに含まれる <strong>${cardCount} 件</strong>のカードも削除されます。`
+      : `「<strong>${escHtml(col.title)}</strong>」を削除しますか？`;
+    document.getElementById("confirm-dialog").showModal();
+  }
+
+  document.getElementById("dialog-confirm").addEventListener("click", () => {
+    if (pendingDeleteColId !== null) {
+      state.columns = state.columns.filter(c => c.id !== pendingDeleteColId);
+      pendingDeleteColId = null;
+    }
+    document.getElementById("confirm-dialog").close();
+    render();
+  });
+  document.getElementById("dialog-cancel").addEventListener("click", () => {
+    pendingDeleteColId = null;
+    document.getElementById("confirm-dialog").close();
+  });
+
+  // ── Add column ─────────────────────────────────────────
+  function buildAddColumnForm() {
+    const wrap = document.createElement("div");
+    wrap.id = "add-column-form-wrap";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "カラム名を入力";
+
+    const actions = document.createElement("div");
+    actions.className = "add-card-form-actions";
+
+    const ok = document.createElement("button");
+    ok.className = "btn-confirm";
+    ok.textContent = "追加";
+
+    const cancel = document.createElement("button");
+    cancel.className = "btn-cancel";
+    cancel.textContent = "キャンセル";
+
+    actions.appendChild(ok);
+    actions.appendChild(cancel);
+    wrap.appendChild(input);
+    wrap.appendChild(actions);
+
+    const commit = () => {
+      const val = input.value.trim();
+      if (val) state.columns.push({ id:nextColId++, title:val, cards:[] });
+      wrap.style.display = "none";
+      input.value = "";
+      render();
+    };
+
+    ok.addEventListener("click", commit);
+    cancel.addEventListener("click", () => { wrap.style.display = "none"; });
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter")  { e.preventDefault(); commit(); }
+      if (e.key === "Escape") { wrap.style.display = "none"; }
+    });
+
+    return wrap;
+  }
+
+  document.getElementById("btn-add-column").addEventListener("click", () => {
+    const wrap = document.getElementById("add-column-form-wrap");
+    wrap.style.display = "block";
+    wrap.querySelector("input").focus();
+  });
+
+  // ── Init ───────────────────────────────────────────────
+  const board = document.getElementById("board");
+  board.appendChild(buildAddColumnForm());
+  render();
+</script>
+</body>
+</html>

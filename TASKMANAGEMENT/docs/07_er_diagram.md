@@ -16,9 +16,11 @@
 │ PK  id          INTEGER │──┐    │ PK  id          INTEGER  │
 │     title       VARCHAR │  └──< │ FK  column_id   INTEGER  │
 │     position    INTEGER │       │     title       VARCHAR  │
-│     created_at  DATETIME│       │     position    INTEGER  │
-│     updated_at  DATETIME│       │     created_at  DATETIME │
-└─────────────────────────┘       │     updated_at  DATETIME │
+│     created_at  DATETIME│       │     priority    VARCHAR  │
+│     updated_at  DATETIME│       │     due_date    DATE     │
+└─────────────────────────┘       │     position    INTEGER  │
+                                  │     created_at  DATETIME │
+                                  │     updated_at  DATETIME │
                                   └──────────────────────────┘
 ```
 
@@ -41,6 +43,8 @@
 | id | INTEGER | ○ | 主キー（自動採番） |
 | column_id | INTEGER | ○ | 外部キー（columns.id） |
 | title | VARCHAR(255) | ○ | カード（タスク）名 |
+| priority | VARCHAR(10) | - | 優先度（'高' / '中' / '低'）。未設定はNULL |
+| due_date | DATE | - | 期限日。未設定はNULL |
 | position | INTEGER | ○ | カラム内での表示順 |
 | created_at | DATETIME | ○ | 作成日時 |
 | updated_at | DATETIME | ○ | 更新日時 |
@@ -48,3 +52,4 @@
 **制約:**
 - `cards.column_id` は `columns.id` を参照（外部キー制約）
 - カラム削除時、配下のカードはカスケード削除する
+- `priority` は `'高'`・`'中'`・`'低'`・`NULL` のいずれか
