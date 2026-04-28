@@ -1,5 +1,7 @@
 .claude/
 .DS_Store
+.vscode/
+.env
 
 # Gradle
 backend/.gradle/
