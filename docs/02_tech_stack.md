@@ -2,36 +2,31 @@
 
 ## フロントエンド
 
-| 項目 | 内容 |
-|------|------|
-| フレームワーク | React 18 |
-| 言語 | TypeScript |
-| バンドラー | Vite |
-| スタイリング | Tailwind CSS |
-| UIコンポーネント | shadcn/ui |
-| ドラッグ&ドロップ | @dnd-kit |
-| 状態管理 | Zustand |
-| HTTPクライアント | TanStack Query + Axios |
-| フォーム | React Hook Form + Zod |
-| テスト | Vitest + Testing Library |
+| 項目 | ライブラリ / ツール | バージョン |
+|------|-------------------|-----------|
+| フレームワーク | React | 19.2.5 |
+| 言語 | TypeScript | 6.0.2 |
+| バンドラー | Vite | 8.0.10 |
+| スタイリング | Tailwind CSS | 3.4.19 |
+| HTTPクライアント | Axios | 1.15.2 |
+| サーバー状態管理 | TanStack Query (React Query) | 5.100.5 |
 
 ## バックエンド
 
-| 項目 | 内容 |
-|------|------|
-| 言語 | Java 21 |
-| フレームワーク | Spring Boot 3.x |
-| ORM | Spring Data JPA + Hibernate |
-| DBマイグレーション | Flyway |
-| 認証 | Spring Security + JWT |
-| バリデーション | Bean Validation（jakarta.validation） |
-| APIドキュメント | Springdoc OpenAPI（Swagger UI） |
-| テスト | JUnit 5 + Mockito + Testcontainers |
-| ビルドツール | Gradle |
+| 項目 | ライブラリ / ツール | バージョン |
+|------|-------------------|-----------|
+| 言語 | Java | 17 |
+| フレームワーク | Spring Boot | 3.5.0 |
+| 依存関係管理 | io.spring.dependency-management | 1.1.7 |
+| ORM | Spring Data JPA + Hibernate | (Spring Boot 管理) |
+| DBマイグレーション | Flyway | (Spring Boot 管理) |
+| 認証 | Spring Security | (Spring Boot 管理) |
+| バリデーション | Bean Validation (jakarta.validation) | (Spring Boot 管理) |
+| ビルドツール | Gradle | 8.x |
 
 ## データベース・インフラ
 
-| 項目 | 内容 |
-|------|------|
-| データベース | PostgreSQL |
-| コンテナ | Docker + Docker Compose |
+| 項目 | 内容 | バージョン |
+|------|------|-----------|
+| データベース | PostgreSQL | 15 |
+| コンテナランタイム | Docker + Docker Compose | - |
