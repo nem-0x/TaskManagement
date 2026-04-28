@@ -1,6 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-board-bg:        #1d4e89;
+  --color-header-bg:       #0052cc;
+  --color-col-bg:          #ebecf0;
+  --color-col-title:       #172b4d;
+  --color-meta-text:       #5e6c84;
+  --color-priority-high:   #e53935;
+  --color-priority-medium: #fb8c00;
+  --color-priority-low:    #43a047;
+  --color-due-overdue:     #e53935;
+  --color-due-soon:        #fb8c00;
+}
 
 *, *::before, *::after {
   box-sizing: border-box;
