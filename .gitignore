@@ -1,0 +1,13 @@
+.DS_Store
+
+# Gradle
+backend/.gradle/
+backend/build/
+
+# IntelliJ / VS Code
+*.iml
+.idea/
+.vscode/
+
+# Logs
+*.log
