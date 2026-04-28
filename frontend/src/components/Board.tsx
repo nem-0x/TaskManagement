@@ -23,10 +23,12 @@ export default function Board() {
   const sorted = [...(data ?? [])].sort((a, b) => a.position - b.position)
 
   return (
-    <main className="flex-1 flex items-start gap-3 p-4 overflow-x-auto">
-      {sorted.map(col => (
-        <Column key={col.id} column={col} />
-      ))}
+    <main className="flex-1 overflow-x-auto">
+      <div className="flex items-start gap-4 p-5 min-w-max">
+        {sorted.map(col => (
+          <Column key={col.id} column={col} />
+        ))}
+      </div>
     </main>
   )
 }
