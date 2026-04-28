@@ -15,8 +15,8 @@
 
 | 項目 | ライブラリ / ツール | バージョン |
 |------|-------------------|-----------|
-| 言語 | Java | 17 |
-| フレームワーク | Spring Boot | 3.5.0 |
+| 言語 | Java | 25 |
+| フレームワーク | Spring Boot | 4.0.6 |
 | 依存関係管理 | io.spring.dependency-management | 1.1.7 |
 | ORM | Spring Data JPA + Hibernate | (Spring Boot 管理) |
 | DBマイグレーション | Flyway | (Spring Boot 管理) |
