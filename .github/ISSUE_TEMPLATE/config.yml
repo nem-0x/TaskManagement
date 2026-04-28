@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: プロジェクト要件定義書
+    url: https://github.com/nem-0x/TaskManagement/blob/main/requirements.md
+    about: 機能要件・非機能要件はこちらを参照してください
