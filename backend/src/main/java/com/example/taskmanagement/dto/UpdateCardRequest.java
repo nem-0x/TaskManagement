@@ -3,14 +3,18 @@ package com.example.taskmanagement.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
 public class UpdateCardRequest {
 
+    @Size(min = 1, max = 255)
     private Optional<String> title = Optional.empty();
 
+    @Pattern(regexp = "^(high|medium|low)$")
     private Optional<String> priority = Optional.empty();
 
     private Optional<LocalDate> dueDate = Optional.empty();

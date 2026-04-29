@@ -60,7 +60,7 @@ TaskManagement/
 
 ### 前提条件
 
-- Java 17+
+- Java 25
 - Node.js 20+
 - Docker Desktop
 
@@ -111,7 +111,7 @@ docker-compose up -d
 
 | サービス | URL |
 |---------|-----|
-| フロントエンド | http://localhost:3000 |
+| フロントエンド | http://localhost:5173 |
 | バックエンド API | http://localhost:8080 |
 | PostgreSQL | localhost:5432 |
 
@@ -129,8 +129,13 @@ curl -s http://localhost:8080/actuator/health
 |---------|------|------|
 | GET | `/api/columns` | 全カラム取得 |
 | GET | `/api/columns/{id}` | カラム取得 |
+| POST | `/api/columns` | カラム作成 |
+| DELETE | `/api/columns/{id}` | カラム削除 |
 | GET | `/api/cards` | 全カード取得 |
 | GET | `/api/cards/{id}` | カード取得 |
+| POST | `/api/cards` | カード作成 |
+| PATCH | `/api/cards/{id}` | カード更新 |
+| DELETE | `/api/cards/{id}` | カード削除 |
 
 ---
 

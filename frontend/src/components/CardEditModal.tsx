@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
-import type { CardResponse } from '../types/api'
+import { toValidPriority, type CardResponse } from '../types/api'
 import { useUpdateCard } from '../hooks/useUpdateCard'
 
 interface Props {
@@ -31,7 +31,7 @@ export default function CardEditModal({ card, onClose }: Props) {
         id: card.id,
         req: {
           title: trimmed,
-          priority: (priority as 'high' | 'medium' | 'low') || null,
+          priority: toValidPriority(priority),
           due_date: dueDate || null,
         },
       },
