@@ -45,4 +45,13 @@ public class ColumnService {
 
         return ColumnResponse.from(columnRepository.save(col));
     }
+
+    @Transactional
+    public void delete(Long id) {
+        TaskColumn col = columnRepository.findByIdWithCards(id)
+                .orElseThrow(() -> new NoSuchElementException("Column not found: " + id));
+        if (col.isDefault())
+            throw new IllegalStateException("デフォルトカラムは削除できません");
+        columnRepository.delete(col);
+    }
 }
