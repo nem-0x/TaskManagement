@@ -4,6 +4,8 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { ColumnResponse } from '../types/api'
 import { useCreateCard } from '../hooks/useCreateCard'
 import { useUpdateCard } from '../hooks/useUpdateCard'
+import { useDeleteColumn } from '../hooks/useDeleteColumn'
+import DeleteConfirmModal from './DeleteConfirmModal'
 import Card from './Card'
 
 interface Props {
@@ -18,8 +20,10 @@ export default function Column({ column }: Props) {
   const [dueDate, setDueDate] = useState('')
   const titleRef = useRef<HTMLInputElement>(null)
 
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const { mutate, isPending } = useCreateCard()
   const { mutate: updateCard } = useUpdateCard()
+  const { mutate: deleteColumn, isPending: isDeleting } = useDeleteColumn()
 
   const { setNodeRef } = useDroppable({ id: `column-${column.id}` })
 
@@ -93,13 +97,16 @@ export default function Column({ column }: Props) {
           <span className="font-bold text-sm text-col-title flex-1 rounded px-1 py-0.5">
             {column.title}
           </span>
-          <button
-            className="text-meta-text hover:bg-[#c1c7d0] hover:text-col-title
-                       text-base leading-none px-1 py-0.5 rounded transition-colors"
-            title="カラムを削除"
-          >
-            ×
-          </button>
+          {!column.is_default && (
+            <button
+              className="text-meta-text hover:bg-[#c1c7d0] hover:text-col-title
+                         text-base leading-none px-1 py-0.5 rounded transition-colors"
+              title="カラムを削除"
+              onClick={() => setDeleteOpen(true)}
+            >
+              ×
+            </button>
+          )}
         </div>
         {/* Sort bar */}
         <div className="flex gap-1 pb-1">
@@ -201,6 +208,15 @@ export default function Column({ column }: Props) {
             + カード追加
           </button>
         </div>
+      )}
+
+      {deleteOpen && (
+        <DeleteConfirmModal
+          message={`「${column.title}」とその中のカードをすべて削除しますか？この操作は取り消せません。`}
+          onConfirm={() => deleteColumn(column.id, { onSuccess: () => setDeleteOpen(false) })}
+          onCancel={() => setDeleteOpen(false)}
+          isPending={isDeleting}
+        />
       )}
     </div>
   )

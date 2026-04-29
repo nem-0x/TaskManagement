@@ -25,4 +25,12 @@ export async function updateCard(id: number, req: UpdateCardRequest): Promise<Ca
   return data
 }
 
+export async function deleteCard(id: number): Promise<void> {
+  await apiClient.delete(`/api/cards/${id}`)
+}
+
+export async function deleteColumn(id: number): Promise<void> {
+  await apiClient.delete(`/api/columns/${id}`)
+}
+
 export default apiClient

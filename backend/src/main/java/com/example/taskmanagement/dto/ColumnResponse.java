@@ -9,6 +9,7 @@ public record ColumnResponse(
         Long id,
         String title,
         Integer position,
+        @JsonProperty("is_default") boolean isDefault,
         @JsonProperty("created_at") LocalDateTime createdAt,
         @JsonProperty("updated_at") LocalDateTime updatedAt,
         List<CardResponse> cards
@@ -21,6 +22,7 @@ public record ColumnResponse(
                 column.getId(),
                 column.getTitle(),
                 column.getPosition(),
+                column.isDefault(),
                 column.getCreatedAt(),
                 column.getUpdatedAt(),
                 cardDtos

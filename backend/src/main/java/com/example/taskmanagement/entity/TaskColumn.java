@@ -25,7 +25,10 @@ public class TaskColumn {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "column", fetch = FetchType.LAZY)
+    @Column(name = "is_default", nullable = false)
+    private boolean isDefault;
+
+    @OneToMany(mappedBy = "column", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     private List<Card> cards = new ArrayList<>();
 
@@ -41,6 +44,8 @@ public class TaskColumn {
     public void setCreatedAt(LocalDateTime v)  { this.createdAt = v; }
     public LocalDateTime getUpdatedAt()        { return updatedAt; }
     public void setUpdatedAt(LocalDateTime v)  { this.updatedAt = v; }
+    public boolean isDefault()                 { return isDefault; }
+    public void setDefault(boolean isDefault)  { this.isDefault = isDefault; }
     public List<Card> getCards()               { return cards; }
     public void setCards(List<Card> cards)     { this.cards = cards; }
 }

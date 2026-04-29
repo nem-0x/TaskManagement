@@ -111,4 +111,11 @@ public class CardService {
         card.setUpdatedAt(LocalDateTime.now());
         return CardResponse.from(cardRepository.save(card));
     }
+
+    @Transactional
+    public void delete(Long id) {
+        if (!cardRepository.existsById(id))
+            throw new NoSuchElementException("Card not found: " + id);
+        cardRepository.deleteById(id);
+    }
 }

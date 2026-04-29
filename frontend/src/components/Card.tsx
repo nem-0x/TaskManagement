@@ -3,6 +3,8 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { CardResponse } from '../types/api'
 import CardEditModal from './CardEditModal'
+import DeleteConfirmModal from './DeleteConfirmModal'
+import { useDeleteCard } from '../hooks/useDeleteCard'
 
 interface Props {
   card: CardResponse
@@ -41,6 +43,8 @@ function formatDate(iso: string): string {
 
 export default function Card({ card }: Props) {
   const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const { mutate: deleteCard, isPending: isDeleting } = useDeleteCard()
 
   const {
     attributes,
@@ -105,7 +109,7 @@ export default function Card({ card }: Props) {
             className="text-[#97a0af] hover:text-priority-high text-sm leading-none
                        px-0.5 rounded flex-shrink-0 transition-colors self-start"
             title="カードを削除"
-            onClick={e => e.stopPropagation()}
+            onClick={e => { e.stopPropagation(); setDeleteOpen(true) }}
           >
             ×
           </button>
@@ -114,6 +118,15 @@ export default function Card({ card }: Props) {
 
       {editOpen && (
         <CardEditModal card={card} onClose={() => setEditOpen(false)} />
+      )}
+
+      {deleteOpen && (
+        <DeleteConfirmModal
+          message={`「${card.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => deleteCard(card.id, { onSuccess: () => setDeleteOpen(false) })}
+          onCancel={() => setDeleteOpen(false)}
+          isPending={isDeleting}
+        />
       )}
     </>
   )

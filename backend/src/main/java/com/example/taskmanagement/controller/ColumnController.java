@@ -38,4 +38,16 @@ public class ColumnController {
     public ResponseEntity<ColumnResponse> createColumn(@Valid @RequestBody CreateColumnRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(columnService.create(req));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteColumn(@PathVariable Long id) {
+        try {
+            columnService.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 }
