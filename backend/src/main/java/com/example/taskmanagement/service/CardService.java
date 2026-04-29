@@ -7,8 +7,11 @@ import com.example.taskmanagement.entity.Card;
 import com.example.taskmanagement.entity.TaskColumn;
 import com.example.taskmanagement.repository.CardRepository;
 import com.example.taskmanagement.repository.TaskColumnRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,8 @@ import java.util.NoSuchElementException;
 @Service
 @Transactional(readOnly = true)
 public class CardService {
+
+    private static final Logger log = LoggerFactory.getLogger(CardService.class);
 
     private final CardRepository cardRepository;
     private final TaskColumnRepository columnRepository;
@@ -40,6 +45,7 @@ public class CardService {
 
     @Transactional
     public CardResponse create(CreateCardRequest req) {
+        log.info("Creating card: title={}, columnId={}", req.title(), req.columnId());
         TaskColumn column = columnRepository.findById(req.columnId())
                 .orElseThrow(() -> new NoSuchElementException("Column not found: " + req.columnId()));
 
@@ -55,25 +61,19 @@ public class CardService {
         card.setCreatedAt(now);
         card.setUpdatedAt(now);
 
-        return CardResponse.from(cardRepository.save(card));
+        CardResponse response = CardResponse.from(cardRepository.save(card));
+        log.info("Created card id={}", response.id());
+        return response;
     }
 
     @Transactional
     public CardResponse update(Long id, UpdateCardRequest req) {
+        log.info("Updating card id={}", id);
         Card card = cardRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Card not found: " + id));
 
-        req.getTitle().ifPresent(t -> {
-            String stripped = t.strip();
-            if (stripped.isEmpty() || stripped.length() > 255)
-                throw new IllegalArgumentException("title must be 1-255 characters");
-            card.setTitle(stripped);
-        });
-        req.getPriority().ifPresent(p -> {
-            if (p != null && !p.matches("^(high|medium|low)$"))
-                throw new IllegalArgumentException("priority must be high, medium, or low");
-            card.setPriority(p);
-        });
+        req.getTitle().ifPresent(t -> card.setTitle(t.strip()));
+        req.getPriority().ifPresent(card::setPriority);
         req.getDueDate().ifPresent(card::setDueDate);
 
         boolean columnChanged = req.getColumnId().isPresent()
@@ -114,8 +114,10 @@ public class CardService {
 
     @Transactional
     public void delete(Long id) {
-        if (!cardRepository.existsById(id))
+        log.info("Deleting card id={}", id);
+        if (!cardRepository.existsById(id)) {
             throw new NoSuchElementException("Card not found: " + id);
+        }
         cardRepository.deleteById(id);
     }
 }

@@ -1,3 +1,11 @@
+export type Priority = 'high' | 'medium' | 'low'
+
+const VALID_PRIORITIES: readonly string[] = ['high', 'medium', 'low']
+
+export function toValidPriority(val: string): Priority | null {
+  return VALID_PRIORITIES.includes(val) ? (val as Priority) : null
+}
+
 export interface CardResponse {
   id: number
   column_id: number
@@ -22,8 +30,8 @@ export interface ColumnResponse {
 export interface CreateCardRequest {
   column_id: number
   title: string
-  priority?: 'high' | 'medium' | 'low'
-  due_date?: string
+  priority?: Priority | null
+  due_date?: string | null
 }
 
 export interface CreateColumnRequest {

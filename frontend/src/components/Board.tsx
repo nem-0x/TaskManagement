@@ -49,16 +49,20 @@ export default function Board({ showAddColumn, onCloseAddColumn }: Props) {
 
   useEffect(() => {
     if (showAddColumn) {
-      setTitle('')
       inputRef.current?.focus()
     }
   }, [showAddColumn])
+
+  function handleClose() {
+    setTitle('')
+    onCloseAddColumn()
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const trimmed = title.trim()
     if (!trimmed) return
-    mutate({ title: trimmed }, { onSuccess: () => onCloseAddColumn() })
+    mutate({ title: trimmed }, { onSuccess: () => handleClose() })
   }
 
   function resolveTarget(overId: UniqueIdentifier) {
@@ -186,7 +190,7 @@ export default function Board({ showAddColumn, onCloseAddColumn }: Props) {
                   </button>
                   <button
                     type="button"
-                    onClick={onCloseAddColumn}
+                    onClick={handleClose}
                     className="text-meta-text hover:bg-[#cdd0d6] hover:text-col-title
                                text-sm px-2 py-1 rounded transition-colors"
                   >

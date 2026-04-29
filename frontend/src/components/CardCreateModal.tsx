@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import { useCreateCard } from '../hooks/useCreateCard'
+import { toValidPriority } from '../types/api'
 
 interface Props {
   columnId: number
@@ -29,7 +30,7 @@ export default function CardCreateModal({ columnId, onClose }: Props) {
       {
         column_id: columnId,
         title: trimmed,
-        priority: (priority as 'high' | 'medium' | 'low') || null,
+        priority: toValidPriority(priority),
         due_date: dueDate || null,
       },
       { onSuccess: onClose }
