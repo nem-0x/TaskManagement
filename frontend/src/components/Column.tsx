@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { ColumnResponse } from '../types/api'
-import { useCreateCard } from '../hooks/useCreateCard'
 import { useUpdateCard } from '../hooks/useUpdateCard'
 import { useDeleteColumn } from '../hooks/useDeleteColumn'
 import DeleteConfirmModal from './DeleteConfirmModal'
+import CardCreateModal from './CardCreateModal'
 import Card from './Card'
 
 interface Props {
@@ -14,52 +14,12 @@ interface Props {
 
 export default function Column({ column }: Props) {
   const sorted = [...column.cards].sort((a, b) => a.position - b.position)
-  const [showForm, setShowForm] = useState(false)
-  const [title, setTitle] = useState('')
-  const [priority, setPriority] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const titleRef = useRef<HTMLInputElement>(null)
-
+  const [createOpen, setCreateOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const { mutate, isPending } = useCreateCard()
   const { mutate: updateCard } = useUpdateCard()
   const { mutate: deleteColumn, isPending: isDeleting } = useDeleteColumn()
 
   const { setNodeRef } = useDroppable({ id: `column-${column.id}` })
-
-  useEffect(() => {
-    if (showForm) titleRef.current?.focus()
-  }, [showForm])
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const trimmed = title.trim()
-    if (!trimmed) return
-
-    mutate(
-      {
-        column_id: column.id,
-        title: trimmed,
-        ...(priority ? { priority: priority as 'high' | 'medium' | 'low' } : {}),
-        ...(dueDate ? { due_date: dueDate } : {}),
-      },
-      {
-        onSuccess: () => {
-          setShowForm(false)
-          setTitle('')
-          setPriority('')
-          setDueDate('')
-        },
-      }
-    )
-  }
-
-  function handleCancel() {
-    setShowForm(false)
-    setTitle('')
-    setPriority('')
-    setDueDate('')
-  }
 
   function handleSortByPriority() {
     const ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }
@@ -137,77 +97,24 @@ export default function Column({ column }: Props) {
             <Card key={card.id} card={card} />
           ))}
         </SortableContext>
-
-        {showForm && (
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white rounded shadow-sm px-2.5 py-2 flex flex-col gap-2"
-          >
-            <input
-              ref={titleRef}
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="カードのタイトル"
-              className="w-full border border-[#b0b8c8] rounded px-2 py-1 text-sm
-                         text-col-title placeholder-meta-text focus:outline-none
-                         focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
-            />
-            <div className="flex gap-2">
-              <select
-                value={priority}
-                onChange={e => setPriority(e.target.value)}
-                className="flex-1 border border-[#b0b8c8] rounded px-2 py-1 text-sm
-                           text-col-title bg-white focus:outline-none
-                           focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
-              >
-                <option value="">優先度（任意）</option>
-                <option value="high">高</option>
-                <option value="medium">中</option>
-                <option value="low">低</option>
-              </select>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={e => setDueDate(e.target.value)}
-                className="flex-1 border border-[#b0b8c8] rounded px-2 py-1 text-sm
-                           text-col-title focus:outline-none
-                           focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
-              />
-            </div>
-            <div className="flex gap-1.5">
-              <button
-                type="submit"
-                disabled={isPending || !title.trim()}
-                className="bg-[#0052cc] hover:bg-[#0047b3] disabled:opacity-50
-                           text-white text-sm font-semibold px-3 py-1 rounded
-                           transition-colors"
-              >
-                {isPending ? '追加中…' : 'カードを追加'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="text-meta-text hover:bg-[#cdd0d6] hover:text-col-title
-                           text-sm px-2 py-1 rounded transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-          </form>
-        )}
       </div>
 
-      {/* Add card button — only shown when form is closed */}
-      {!showForm && (
-        <div className="px-2 pb-2 pt-1.5">
-          <button
-            onClick={() => setShowForm(true)}
-            className="w-full bg-transparent text-left px-2 py-1.5 rounded text-sm text-meta-text
-                       hover:bg-[#cdd0d6] hover:text-col-title transition-colors"
-          >
-            + カード追加
-          </button>
-        </div>
+      {/* Add card button */}
+      <div className="px-2 pb-2 pt-1.5">
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="w-full bg-transparent text-left px-2 py-1.5 rounded text-sm text-meta-text
+                     hover:bg-[#cdd0d6] hover:text-col-title transition-colors"
+        >
+          + カード追加
+        </button>
+      </div>
+
+      {createOpen && (
+        <CardCreateModal
+          columnId={column.id}
+          onClose={() => setCreateOpen(false)}
+        />
       )}
 
       {deleteOpen && (
