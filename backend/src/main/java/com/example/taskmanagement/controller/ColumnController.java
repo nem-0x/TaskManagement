@@ -1,7 +1,10 @@
 package com.example.taskmanagement.controller;
 
 import com.example.taskmanagement.dto.ColumnResponse;
+import com.example.taskmanagement.dto.CreateColumnRequest;
 import com.example.taskmanagement.service.ColumnService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -29,5 +32,10 @@ public class ColumnController {
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping
+    public ResponseEntity<ColumnResponse> createColumn(@Valid @RequestBody CreateColumnRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(columnService.create(req));
     }
 }

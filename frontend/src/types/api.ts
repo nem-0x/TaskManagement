@@ -17,3 +17,14 @@ export interface ColumnResponse {
   updated_at: string
   cards: CardResponse[]
 }
+
+export interface CreateCardRequest {
+  column_id: number
+  title: string
+  priority?: 'high' | 'medium' | 'low'
+  due_date?: string
+}
+
+export interface CreateColumnRequest {
+  title: string
+}

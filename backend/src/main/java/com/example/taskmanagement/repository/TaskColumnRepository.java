@@ -14,4 +14,7 @@ public interface TaskColumnRepository extends JpaRepository<TaskColumn, Long> {
 
     @Query("SELECT c FROM TaskColumn c LEFT JOIN FETCH c.cards WHERE c.id = :id")
     Optional<TaskColumn> findByIdWithCards(@Param("id") Long id);
+
+    @Query("SELECT COALESCE(MAX(c.position), 0) FROM TaskColumn c")
+    int findMaxPosition();
 }
