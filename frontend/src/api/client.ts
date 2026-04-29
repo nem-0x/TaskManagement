@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { CardResponse, ColumnResponse, CreateCardRequest, CreateColumnRequest } from '../types/api'
+import type { CardResponse, ColumnResponse, CreateCardRequest, CreateColumnRequest, UpdateCardRequest } from '../types/api'
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
@@ -17,6 +17,11 @@ export async function createCard(req: CreateCardRequest): Promise<CardResponse> 
 
 export async function createColumn(req: CreateColumnRequest): Promise<ColumnResponse> {
   const { data } = await apiClient.post<ColumnResponse>('/api/columns', req)
+  return data
+}
+
+export async function updateCard(id: number, req: UpdateCardRequest): Promise<CardResponse> {
+  const { data } = await apiClient.patch<CardResponse>(`/api/cards/${id}`, req)
   return data
 }
 

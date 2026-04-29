@@ -28,3 +28,11 @@ export interface CreateCardRequest {
 export interface CreateColumnRequest {
   title: string
 }
+
+export interface UpdateCardRequest {
+  title?: string
+  priority?: 'high' | 'medium' | 'low' | null
+  due_date?: string | null
+  column_id?: number
+  position?: number
+}

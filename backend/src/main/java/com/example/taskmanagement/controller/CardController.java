@@ -2,6 +2,7 @@ package com.example.taskmanagement.controller;
 
 import com.example.taskmanagement.dto.CardResponse;
 import com.example.taskmanagement.dto.CreateCardRequest;
+import com.example.taskmanagement.dto.UpdateCardRequest;
 import com.example.taskmanagement.service.CardService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,19 @@ public class CardController {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(cardService.create(req));
         } catch (NoSuchElementException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<CardResponse> updateCard(
+            @PathVariable Long id,
+            @RequestBody UpdateCardRequest req) {
+        try {
+            return ResponseEntity.ok(cardService.update(id, req));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
     }
